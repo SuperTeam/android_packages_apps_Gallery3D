@@ -19,6 +19,7 @@ package com.cooliris.media;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -134,6 +135,10 @@ public final class RenderView extends GLSurfaceView implements GLSurfaceView.Ren
         super(context);
         setBackgroundDrawable(null);
         setFocusable(true);
+        if (getResources().getBoolean(R.bool.use_32bpp_display)) {
+            setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+            getHolder().setFormat(PixelFormat.RGBA_8888);
+        }
         setRenderer(this);
         mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         if (sCachedTextureLoadThread == null) {
@@ -239,8 +244,12 @@ public final class RenderView extends GLSurfaceView implements GLSurfaceView.Ren
                     Bitmap.Config config = bitmap.getConfig();
                     if (config == null)
                         config = Bitmap.Config.RGB_565;
-                    if (width * height >= 512 * 512)
-                        config = Bitmap.Config.RGB_565;
+                    if (width * height >= 512 * 512) {
+                        if (getResources().getBoolean(R.bool.use_32bpp_display))
+                            config = Bitmap.Config.ARGB_8888;
+                        else
+                            config = Bitmap.Config.RGB_565;
+                    }
                     Bitmap padded = Bitmap.createBitmap(paddedWidth, paddedHeight, config);
                     Canvas canvas = new Canvas(padded);
                     canvas.drawBitmap(bitmap, 0, 0, null);
